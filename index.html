@@ -1455,6 +1455,94 @@ body.light .mc::after,.body.light .cc::after{
   );
 }
 
+/* ── Aurora Drift: autonomous hero layer animations ─────────────────
+   One-of-a-kind immersive motion — replaces mouse-tracking tilt.
+   Each hero layer drifts on its own organic Lissajous-ish path.
+   UNDO: delete from here through the nameShimmer @keyframes            */
+
+@keyframes driftA{
+  0%  {transform:translate3d(0,0,0)}
+  14% {transform:translate3d(16px,-9px,0)}
+  28% {transform:translate3d(18px,5px,0)}
+  42% {transform:translate3d(7px,13px,0)}
+  57% {transform:translate3d(-13px,8px,0)}
+  71% {transform:translate3d(-17px,-4px,0)}
+  85% {transform:translate3d(-6px,-11px,0)}
+  100%{transform:translate3d(0,0,0)}
+}
+@keyframes driftB{
+  0%  {transform:translate3d(0,0,0)}
+  12% {transform:translate3d(26px,-15px,0)}
+  25% {transform:translate3d(28px,10px,0)}
+  40% {transform:translate3d(11px,21px,0)}
+  55% {transform:translate3d(-21px,12px,0)}
+  70% {transform:translate3d(-25px,-6px,0)}
+  85% {transform:translate3d(-9px,-16px,0)}
+  100%{transform:translate3d(0,0,0)}
+}
+@keyframes driftC{
+  0%  {transform:translate3d(0,0,0)}
+  20% {transform:translate3d(4px,-3px,0)}
+  40% {transform:translate3d(5px,4px,0)}
+  60% {transform:translate3d(-4px,3px,0)}
+  80% {transform:translate3d(-5px,-2px,0)}
+  100%{transform:translate3d(0,0,0)}
+}
+
+/* Hero layers: drift animations */
+.h-glow{animation:driftA 20s ease-in-out 0.8s infinite;will-change:transform}
+.h-rim-accent{animation:driftB 13s ease-in-out 1.4s infinite;will-change:transform}
+.h-text{animation:driftC 27s ease-in-out 2s infinite;will-change:transform}
+
+/* Cinematic light sweep — gold beam crosses hero every 14s */
+.h-sweep{
+  position:absolute;top:-10%;left:0;
+  width:180px;height:130%;
+  background:linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(201,168,108,.09) 30%,
+    rgba(255,240,200,.16) 50%,
+    rgba(201,168,108,.09) 70%,
+    transparent 100%
+  );
+  transform:skewX(-18deg) translateX(-200%);
+  animation:heroSweep 14s ease-in-out 4.5s infinite;
+  pointer-events:none;
+  z-index:6;
+  mix-blend-mode:screen;
+}
+@keyframes heroSweep{
+  0%    {transform:skewX(-18deg) translateX(-200%);opacity:0}
+  2%    {opacity:1}
+  22%   {transform:skewX(-18deg) translateX(calc(100vw + 220px));opacity:0}
+  23%,100%{transform:skewX(-18deg) translateX(-200%);opacity:0}
+}
+
+/* Living aurora — secondary glow overlay pulses in/out */
+.h-bg2{
+  position:absolute;inset:0;z-index:1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 55% at 66% 18%,rgba(201,168,108,.12) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 45% at 34% 84%,rgba(100,160,255,.08) 0%,transparent 50%);
+  animation:hBg2Pulse 16s ease-in-out 1s infinite;
+}
+@keyframes hBg2Pulse{
+  0%,100%{opacity:.18}
+  38%,62%{opacity:1}
+}
+
+/* Name shimmer — continuous gradient sweep across the gold/silver gradient */
+.h-name{
+  background-size:300% auto!important;
+  animation:fsu .9s .45s both,nameShimmer 9s linear 2.8s infinite!important;
+}
+@keyframes nameShimmer{
+  0%  {background-position:200% center}
+  100%{background-position:-200% center}
+}
+
 /* ── 3D PARALLAX CSS END ────────────────────── */
 
 /* ── First org card: default highlight hint ──
@@ -1611,8 +1699,10 @@ body.light .ogc-hint{
   <!-- DARK ATMOSPHERIC BACKGROUND -->
   <div class="h-bg">
     <div class="h-scrim"></div>
+    <div class="h-bg2"></div>
     <div class="h-glow"></div>
     <div class="h-rim-accent"></div>
+    <div class="h-sweep"></div>
   </div>
 
   <!-- FLOATING CUTOUT — bg-removed PNG, scroll-animated downward into Vision -->
@@ -2309,132 +2399,11 @@ function tth(){
 (function(){
   'use strict';
 
-  /* ── 0. Config ────────────────────────── */
-  const LERP_SPEED   = 0.055;   /* mouse lag (lower = more lag) */
-  const HERO_TILT    = 1.8;     /* max hero section tilt in deg */
-  const DEPTH_SCALE  = 0.00014; /* px-per-px movement ratio */
-
-  /* ── 1. Hero parallax layer definitions ─ */
-  /* el: querySelector string | depthX/Y: movement multiplier */
-  const HERO_LAYERS = [
-    { sel:'#hero .h-glow',       dx: 38,  dy: 28  },
-    { sel:'#hero .h-rim-accent', dx: 300, dy: 200 },
-    { sel:'#hero .h-text',       dx: 75,  dy: 55  },
-    { sel:'#hero .h-orgs',       dx: 42,  dy: 30  }, /* extra depth inside text */
-    { sel:'#hero .sc',           dx: 145, dy: 105 },
-    { sel:'#hero .h-ey',         dx: 28,  dy: 22  },
-    { sel:'#hero .h-name',       dx: 55,  dy: 40  },
-    { sel:'#hero .h-role',       dx: 35,  dy: 26  },
-    { sel:'#hero .h-div',        dx: 48,  dy: 35  },
-  ];
-
-  /* ── 2. Card layers (per-section) ─────── */
-  const CARD_LAYERS = [
-    { sel:'.mc', dx:22, dy:16 },
-    { sel:'.cc', dx:18, dy:13 },
-    { sel:'.vsc',dx:14, dy:10 },
-  ];
-
-  /* ── 3. Build element refs ─────────────── */
-  const heroLayers = HERO_LAYERS.map(l=>({
-    ...l, el: document.querySelector(l.sel)
-  })).filter(l=>l.el);
-
-  /* Apply base class */
-  heroLayers.forEach(l=>l.el.classList.add('px-elem'));
-
-  /* ── 4. Mouse / touch state ────────────── */
-  let targetX=0, targetY=0;  /* mouse offset from center */
-  let curX=0,    curY=0;     /* lerped current */
-  let heroRaf=null;
-  let heroInView=true;
-
-  /* ── 5. Hero lerp animation loop ─────── */
-  function heroLoop(){
-    curX += (targetX - curX) * LERP_SPEED;
-    curY += (targetY - curY) * LERP_SPEED;
-
-    const hw = innerWidth  * .5;
-    const hh = innerHeight * .5;
-
-    /* Normalize to -1…+1, clamped */
-    const nx = Math.max(-1, Math.min(1, curX / hw));
-    const ny = Math.max(-1, Math.min(1, curY / hh));
-
-    /* Apply per-layer transform */
-    heroLayers.forEach(({ el, dx, dy }) => {
-      const tx = nx * dx * .01 * Math.min(hw, 900);
-      const ty = ny * dy * .01 * Math.min(hh, 700);
-      el.style.transform = `translate3d(${tx.toFixed(2)}px,${ty.toFixed(2)}px,0)`;
-    });
-
-    /* Hero section subtle 3D tilt — only if hero in view */
-    if(heroInView){
-      const rx =  ny * HERO_TILT;
-      const ry = -nx * HERO_TILT;
-      const heroEl2 = document.getElementById('hero');
-      if(heroEl2) heroEl2.style.transform =
-        `perspective(1600px) rotateX(${rx.toFixed(3)}deg) rotateY(${ry.toFixed(3)}deg)`;
-    }
-
-    const delta = Math.abs(curX-targetX)+Math.abs(curY-targetY);
-    heroRaf = delta > .08 ? requestAnimationFrame(heroLoop) : null;
-  }
-
-  /* ── 6. Mouse move listener ──────────── */
-  document.addEventListener('mousemove', e=>{
-    if(!heroInView) return;
-    targetX = e.clientX - innerWidth  * .5;
-    targetY = e.clientY - innerHeight * .5;
-    if(!heroRaf) heroRaf = requestAnimationFrame(heroLoop);
-  }, {passive:true});
-
-  /* Reset on mouse leave */
-  document.addEventListener('mouseleave', ()=>{
-    targetX=0; targetY=0;
-    if(!heroRaf) heroRaf = requestAnimationFrame(heroLoop);
-  });
-
-  /* ── 7. Hero visibility watcher ─────── */
-  const heroEl = document.getElementById('hero');
-  if(heroEl){
-    new IntersectionObserver(([e])=>{
-      heroInView = e.isIntersecting;
-      if(!heroInView){
-        /* Snap back to flat when hero scrolled away */
-        heroEl.style.transform='';
-        heroLayers.forEach(l=>{ l.el.style.transform=''; });
-        curX=targetX=0; curY=targetY=0;
-      }
-    },{threshold:0.05}).observe(heroEl);
-  }
-
-  /* ── 8. Device orientation (mobile tilt) */
-  function bindGyro(){
-    let gyroActive=false;
-    window.addEventListener('deviceorientation', e=>{
-      if(!heroInView) return;
-      /* gamma = left/right tilt, beta = fwd/back tilt */
-      const g = Math.min(Math.max(e.gamma||0, -35),35);
-      const b = Math.min(Math.max((e.beta||45)-45,-30),30);
-      targetX = g * 7;
-      targetY = b * 5;
-      if(!heroRaf) heroRaf = requestAnimationFrame(heroLoop);
-    },{passive:true});
-  }
-  if(typeof DeviceOrientationEvent !== 'undefined'){
-    if(typeof DeviceOrientationEvent.requestPermission === 'function'){
-      /* iOS 13+ needs user gesture */
-      document.addEventListener('click', function reqGyro(){
-        DeviceOrientationEvent.requestPermission()
-          .then(r=>{ if(r==='granted') bindGyro(); })
-          .catch(()=>{});
-        document.removeEventListener('click',reqGyro);
-      },{once:true});
-    } else {
-      bindGyro();
-    }
-  }
+  /* ── Hero autonomous Aurora Drift ──────────────
+     Mouse-tracking tilt removed (steps 0–8 were here).
+     Layers now drift via CSS @keyframes driftA/B/C.
+     Light sweep + living aurora handled by .h-sweep / .h-bg2.
+     ─────────────────────────────────────────────── */
 
   /* ── 9. Section 3D entrance observer ─── */
   const s3dEls = document.querySelectorAll('.s3d');
