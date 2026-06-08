@@ -711,6 +711,8 @@ body::after{content:'';position:fixed;inset:0;
 .civ{font-size:.78rem;line-height:1.55;color:var(--t1);font-weight:500}
 .civ a{color:inherit;text-decoration:none;transition:color .2s}
 .civ a:hover{color:var(--gl)}
+.civ-map{display:block;font-size:.54rem;letter-spacing:.1em;color:var(--g);margin-top:.35rem;opacity:.8;transition:opacity .2s}
+.civ a:hover .civ-map{opacity:1}
 .cbtns{display:flex;gap:.9rem;justify-content:center;flex-wrap:wrap;
   opacity:0;transform:translateY(17px);transition:all .6s .44s}
 .cbtns.v{opacity:1;transform:translateY(0)}
@@ -2030,7 +2032,29 @@ body.light .ogc-hint{
               <defs><linearGradient id="gci4" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#e2c88a"/><stop offset="1" stop-color="#9ab8d0"/></linearGradient></defs>
             </svg>
           </div>
-          <div><div class="cil">Address</div><div class="civ">Plot No.3, SN88, Nr Khodiyar Mandir,<br>Shampara (Navagam), Bhavnagar,<br>Gujarat — 364060</div></div>
+          <div>
+            <div class="cil">Address</div>
+            <div class="civ">
+              <a href="https://maps.google.com/maps?q=21.737908,72.023750" target="_blank" rel="noopener noreferrer">
+                Plot No.3, SN88, Nr Khodiyar Mandir,<br>Shampara (Navagam), Bhavnagar,<br>Gujarat — 364060
+                <span class="civ-map">📍 Open in Maps ↗</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="ci">
+          <div class="cii">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="url(#gci5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4V9h4v1.5"/>
+              <rect x="2" y="9" width="4" height="12"/>
+              <circle cx="4" cy="4" r="2"/>
+              <defs><linearGradient id="gci5" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#e2c88a"/><stop offset="1" stop-color="#9ab8d0"/></linearGradient></defs>
+            </svg>
+          </div>
+          <div>
+            <div class="cil">LinkedIn</div>
+            <div class="civ"><a href="https://www.linkedin.com/in/mahabhadra-shah-673ab6193" target="_blank" rel="noopener noreferrer">Mahabhadra Shah ↗</a></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2043,6 +2067,10 @@ body.light .ogc-hint{
       <a href="mailto:mahabhadra@castorafoamtech.com" class="bo">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         Email
+      </a>
+      <a href="https://www.linkedin.com/in/mahabhadra-shah-673ab6193" target="_blank" rel="noopener noreferrer" class="bo">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4V9h4v1.5"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        LinkedIn
       </a>
     </div>
   </div>
