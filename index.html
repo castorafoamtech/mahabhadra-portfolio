@@ -1679,163 +1679,249 @@ body.light .ogc-hint{
     ogcRing 2s ease-in-out 4.5s 4;
 }
 
-/* ═══ RECOGNITION & ACKNOWLEDGEMENTS ════════════════════════════════
-   SCALABLE: add more .rec-item blocks; styling is component-based.
-   ══════════════════════════════════════════════════════════════════ */
+/* ═══ RECOGNITION — STICKY SCROLL SHOWCASE ══════════════════════════
+   Sticky-scroll pattern: #rec is a tall canvas; .rec-stage sticks to
+   viewport while the canvas scrolls; JS maps progress → animations.
+   To add more items: add a .rec-slide + .rec-vis-item pair, update
+   N in the JS engine, and adjust #rec height (add ~120vh per item).
+   ════════════════════════════════════════════════════════════════ */
+
+/* Tall scroll canvas — NO transform (would break position:sticky) */
 #rec{
-  position:relative;padding:7rem 1.75rem;
-  background:linear-gradient(180deg,var(--d) 0%,#05091b 55%,var(--d) 100%);
-  overflow:hidden;
+  position:relative;
+  height:420vh;
+  background:linear-gradient(180deg,var(--d) 0%,#05091c 18%,#04081a 82%,var(--d) 100%);
 }
-/* Dot-grid ambient texture */
+@media(max-width:767px){#rec{height:340vh}}
+/* Dot-grid texture */
 #rec::before{
   content:'';position:absolute;inset:0;
-  background-image:radial-gradient(circle,rgba(201,168,108,.038) 1px,transparent 1px);
+  background-image:radial-gradient(circle,rgba(201,168,108,.032) 1px,transparent 1px);
   background-size:34px 34px;
-  mask-image:radial-gradient(ellipse 88% 80% at 50% 50%,black 0%,transparent 100%);
-  pointer-events:none;
-}
-/* Crown glow at top */
-#rec::after{
-  content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);
-  width:520px;height:280px;
-  background:radial-gradient(ellipse,rgba(201,168,108,.07),transparent 70%);
+  mask-image:radial-gradient(ellipse 80% 65% at 50% 30%,black 0%,transparent 100%);
   pointer-events:none;z-index:0;
 }
-.reci{max-width:1040px;margin:0 auto;position:relative;z-index:2}
 
-/* ── Each recognition block ── */
-.rec-item{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:clamp(2rem,4vw,4rem);align-items:center;
-  opacity:0;transform:translateY(26px);
-  transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);
+/* Sticky viewport — sticks while the canvas scrolls past */
+.rec-stage{
+  position:sticky;
+  top:0;
+  height:100vh;height:100svh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:1.4rem 1.75rem;
+  z-index:1;
 }
-.rec-item.v{opacity:1;transform:translateY(0)}
-/* Reverse — images left, text right */
-@media(min-width:768px){
-  .rec-item--rev .rec-text{order:2}
-  .rec-item--rev .rec-imgs{order:1}
-}
-@media(max-width:767px){.rec-item{grid-template-columns:1fr;gap:2rem}}
+@media(max-width:767px){.rec-stage{padding:.9rem 1rem}}
 
-/* ── Text side ── */
-.rec-text{display:flex;flex-direction:column;gap:1rem;justify-content:center}
+/* The premium glass showcase pod */
+.rec-pod{
+  width:100%;max-width:1040px;
+  height:calc(100vh - 4rem);height:calc(100svh - 4rem);
+  max-height:820px;
+  background:linear-gradient(150deg,rgba(9,17,34,.93) 0%,rgba(5,10,22,.96) 100%);
+  border:1px solid rgba(201,168,108,.22);
+  border-radius:24px;
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  overflow:hidden;position:relative;
+  box-shadow:
+    0 48px 120px rgba(0,0,0,.7),
+    0 0 0 1px rgba(255,255,255,.04) inset,
+    0 1px 0 rgba(255,255,255,.09) inset,
+    0 0 100px rgba(201,168,108,.05);
+  opacity:0;transform:scale(.97) translateY(26px);
+  transition:opacity 1s .15s ease,transform 1.3s .15s cubic-bezier(.16,1,.3,1);
+}
+.rec-pod.v{opacity:1;transform:scale(1) translateY(0)}
+/* Gold top-edge hairline */
+.rec-pod::before{
+  content:'';position:absolute;top:0;left:8%;right:8%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,168,108,.6),transparent);
+  z-index:10;
+}
+
+/* ── Top bar: label · progress · counter ── */
+.rec-topbar{
+  position:absolute;top:0;left:0;right:0;height:50px;
+  display:flex;align-items:center;gap:1rem;padding:0 1.6rem;
+  border-bottom:1px solid rgba(201,168,108,.08);z-index:8;
+}
+.rec-lbl{
+  font-size:.5rem;letter-spacing:.22em;text-transform:uppercase;font-weight:700;
+  color:rgba(201,168,108,.4);white-space:nowrap;
+}
+.rec-prog-track{flex:1;height:2px;background:rgba(201,168,108,.1);border-radius:2px;overflow:hidden}
+.rec-prog-fill{
+  height:100%;width:0;
+  background:linear-gradient(90deg,var(--gd),var(--g),var(--gl));
+  border-radius:2px;transition:width .25s ease;
+}
+.rec-cnt{
+  font-size:.52rem;letter-spacing:.18em;font-weight:700;color:var(--g);
+  white-space:nowrap;font-variant-numeric:tabular-nums;min-width:3.2rem;text-align:right;
+}
+
+/* ── Body: two columns ── */
+.rec-body{
+  position:absolute;top:50px;left:0;right:0;bottom:58px;
+  display:grid;grid-template-columns:42% 58%;
+}
+@media(max-width:767px){
+  .rec-body{grid-template-columns:1fr;grid-template-rows:48% 52%}
+  .rec-visuals{order:1}
+  .rec-texts{order:2}
+}
+
+/* Left: text column */
+.rec-texts{
+  position:relative;overflow:hidden;
+  border-right:1px solid rgba(201,168,108,.07);
+}
+@media(max-width:767px){.rec-texts{border-right:none;border-bottom:1px solid rgba(201,168,108,.07)}}
+
+/* Each text slide — absolutely stacked, JS drives opacity+transform */
+.rec-slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;justify-content:center;gap:.9rem;
+  padding:2.2rem 2rem 2.2rem 2.2rem;
+  opacity:0;visibility:hidden;will-change:opacity,transform;
+}
+@media(max-width:767px){
+  .rec-slide{padding:1.2rem 1.2rem 1rem;gap:.65rem;justify-content:flex-end}
+}
+
 .rec-num{
   font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;font-weight:700;
-  color:var(--gd);display:flex;align-items:center;gap:.65rem;
+  color:var(--gd);display:flex;align-items:center;gap:.6rem;
 }
-.rec-num::after{content:'';height:1px;width:36px;background:linear-gradient(90deg,var(--gd),transparent)}
-.rec-source{
-  font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--g);
-  opacity:0;transform:translateY(10px);transition:opacity .5s .12s,transform .5s .12s;
-}
-.rec-item.v .rec-source{opacity:1;transform:translateY(0)}
+.rec-num::after{content:'';height:1px;width:30px;background:linear-gradient(90deg,var(--gd),transparent)}
+.rec-source{font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--g)}
 .rec-title{
-  font-size:clamp(1.5rem,3.6vw,2.45rem);font-weight:900;line-height:1.08;letter-spacing:-.024em;
-  background:linear-gradient(140deg,#fff 0%,var(--gl) 48%,var(--sl) 100%);
+  font-size:clamp(1.4rem,2.6vw,2.3rem);font-weight:900;line-height:1.07;letter-spacing:-.026em;
+  background:linear-gradient(140deg,#fff 0%,var(--gl) 46%,var(--sl) 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  opacity:0;transform:translateY(16px);transition:opacity .65s .2s,transform .65s .2s cubic-bezier(.16,1,.3,1);
 }
-.rec-item.v .rec-title{opacity:1;transform:translateY(0)}
 .rec-badge{
-  display:inline-flex;align-items:center;gap:.55rem;
+  display:inline-flex;align-items:center;gap:.5rem;
   background:rgba(201,168,108,.055);border:1px solid rgba(201,168,108,.16);
-  border-radius:50px;padding:.45rem 1rem;
-  font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  border-radius:50px;padding:.42rem .9rem;
+  font-size:.52rem;letter-spacing:.11em;text-transform:uppercase;font-weight:700;
   color:var(--g);width:fit-content;
-  opacity:0;transform:scale(.9) translateY(6px);transition:opacity .5s .32s,transform .5s .32s;
 }
-.rec-item.v .rec-badge{opacity:1;transform:scale(1) translateY(0)}
 
-/* ── Image side ── */
-.rec-imgs{position:relative}
+/* Right: visual column */
+.rec-visuals{position:relative;overflow:hidden}
 
-/* Dual stacked */
-.rec-dual{position:relative;height:350px}
-@media(max-width:767px){.rec-dual{height:230px}}
-@media(min-width:768px) and (max-width:960px){.rec-dual{height:275px}}
+/* Each visual slide — stacked, JS drives opacity+transform+scale */
+.rec-vis-item{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:1.4rem 1.6rem 1.4rem 1rem;
+  opacity:0;visibility:hidden;will-change:opacity,transform;
+}
+@media(max-width:767px){.rec-vis-item{padding:1rem}}
 
+/* Dual stacked images — fills the vis panel */
+.rec-dual{position:relative;width:100%;height:100%}
 .rec-main,.rec-sub{
-  position:absolute;border-radius:16px;overflow:hidden;
-  border:1px solid rgba(201,168,108,.18);
+  position:absolute;border-radius:14px;overflow:hidden;
+  border:1px solid rgba(201,168,108,.2);
+  will-change:transform;
 }
 .rec-main{
-  top:0;left:0;width:65%;
-  box-shadow:0 22px 60px rgba(0,0,0,.62),0 0 26px rgba(201,168,108,.05);
-  opacity:0;transform:translate(-14px,-10px);
-  transition:opacity .88s .08s cubic-bezier(.16,1,.3,1),transform .88s .08s cubic-bezier(.16,1,.3,1),box-shadow .4s;
+  top:6%;left:0;width:66%;
+  box-shadow:0 20px 54px rgba(0,0,0,.62),0 0 22px rgba(201,168,108,.05);
 }
-.rec-item.v .rec-main{opacity:1;transform:translate(0,0)}
-.rec-main img{width:100%;display:block;object-fit:cover;aspect-ratio:16/10}
 .rec-main::after{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,var(--g),transparent 70%);z-index:3;
 }
 .rec-sub{
-  bottom:0;right:0;width:54%;z-index:2;background:var(--d);
-  box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 20px rgba(201,168,108,.06);
-  opacity:0;transform:translate(12px,10px);
-  transition:opacity .88s .22s cubic-bezier(.16,1,.3,1),transform .88s .22s cubic-bezier(.16,1,.3,1),box-shadow .4s;
+  bottom:4%;right:0;width:54%;z-index:2;
+  box-shadow:0 14px 42px rgba(0,0,0,.56),0 0 16px rgba(201,168,108,.06);
 }
-.rec-item.v .rec-sub{opacity:1;transform:translate(0,0)}
-.rec-sub img{width:100%;display:block;object-fit:cover;aspect-ratio:16/10}
 .rec-sub::before{
   content:'';position:absolute;inset:-1px;border-radius:inherit;
-  background:linear-gradient(135deg,rgba(201,168,108,.2),transparent 50%);
+  background:linear-gradient(135deg,rgba(201,168,108,.22),transparent 52%);
   pointer-events:none;z-index:3;
 }
-
-/* Hover depth on dual */
-.rec-imgs:hover .rec-main{
-  transform:translate(-5px,-5px)!important;
-  box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 42px rgba(201,168,108,.1)!important;
-}
-.rec-imgs:hover .rec-sub{
-  transform:translate(5px,5px)!important;
-  box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 28px rgba(201,168,108,.1)!important;
+.rec-main img,.rec-sub img{width:100%;display:block;object-fit:cover;aspect-ratio:16/10}
+@media(max-width:767px){
+  .rec-main{width:62%;top:0}.rec-sub{width:52%;bottom:0}
 }
 
 /* Solo image */
 .rec-solo{
-  border-radius:18px;overflow:hidden;
-  border:1px solid rgba(201,168,108,.18);
-  box-shadow:0 28px 72px rgba(0,0,0,.6),0 0 36px rgba(201,168,108,.06);
-  position:relative;
-  opacity:0;transform:scale(.96) translateY(12px);
-  transition:opacity .9s .08s cubic-bezier(.16,1,.3,1),transform .9s .08s cubic-bezier(.16,1,.3,1),box-shadow .4s;
-}
-.rec-item.v .rec-solo{opacity:1;transform:scale(1) translateY(0)}
-.rec-solo img{width:100%;display:block;object-fit:cover;aspect-ratio:4/3}
-.rec-solo::after{
-  content:'';position:absolute;inset:0;border-radius:inherit;
-  background:linear-gradient(to top,rgba(5,9,17,.38) 0%,transparent 55%);
-  pointer-events:none;z-index:2;
+  border-radius:16px;overflow:hidden;
+  border:1px solid rgba(201,168,108,.2);
+  box-shadow:0 24px 64px rgba(0,0,0,.62),0 0 30px rgba(201,168,108,.06);
+  width:80%;max-width:380px;position:relative;
 }
 .rec-solo::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,var(--g),transparent 70%);z-index:3;
 }
-.rec-imgs:hover .rec-solo{
-  box-shadow:0 40px 100px rgba(0,0,0,.72),0 0 50px rgba(201,168,108,.11)!important;
-  transform:scale(1.008) translateY(-4px)!important;
-}
+.rec-solo img{width:100%;display:block;object-fit:cover;aspect-ratio:4/3}
+@media(max-width:767px){.rec-solo{width:86%}}
 
-/* Divider between blocks */
-.rec-div{
-  height:1px;
-  background:linear-gradient(90deg,transparent,rgba(201,168,108,.1),transparent);
-  margin:5.5rem 0;
-  opacity:0;transition:opacity .7s .1s;
+/* Body edge fades — hint at overflowing content */
+.rec-fade-t,.rec-fade-b{
+  position:absolute;left:0;right:0;height:52px;z-index:7;pointer-events:none;
 }
-.rec-div.v{opacity:1}
+.rec-fade-t{top:50px;background:linear-gradient(to bottom,rgba(6,12,26,.65),transparent)}
+.rec-fade-b{bottom:58px;background:linear-gradient(to top,rgba(6,12,26,.65),transparent)}
+
+/* ── Bottom bar: dots + scroll hint ── */
+.rec-botbar{
+  position:absolute;bottom:0;left:0;right:0;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.6rem;
+  border-top:1px solid rgba(201,168,108,.08);z-index:8;
+}
+.rec-dots{display:flex;gap:.6rem;align-items:center}
+.rec-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(201,168,108,.18);border:1px solid rgba(201,168,108,.2);
+  transition:all .38s cubic-bezier(.16,1,.3,1);
+}
+.rec-dot.rec-dot--a{
+  width:20px;border-radius:4px;
+  background:var(--g);border-color:var(--gl);
+  box-shadow:0 0 10px rgba(201,168,108,.38);
+}
+.rec-hint{
+  display:flex;align-items:center;gap:.55rem;
+  font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;font-weight:600;
+  color:rgba(201,168,108,.45);transition:opacity .4s;
+}
+.rec-hint svg{animation:recHintBounce 1.9s ease-in-out infinite;color:var(--g)}
+@keyframes recHintBounce{
+  0%,100%{transform:translateY(-2px);opacity:.4}
+  50%{transform:translateY(3px);opacity:1}
+}
 
 /* Light mode */
-body.light #rec{background:linear-gradient(180deg,#eee9e0 0%,#f5f1ea 55%,#eee9e0 100%)}
+body.light #rec{background:linear-gradient(180deg,#ece7de 0%,#f3ede5 18%,#f1ece3 82%,#ece7de 100%)}
 body.light #rec::before{background-image:radial-gradient(circle,rgba(122,82,24,.04) 1px,transparent 1px)}
+body.light .rec-pod{
+  background:linear-gradient(150deg,rgba(255,252,246,.94),rgba(250,247,241,.97));
+  border-color:rgba(122,82,24,.22);
+  box-shadow:0 48px 120px rgba(0,0,0,.1),0 0 0 1px rgba(122,82,24,.07) inset;
+}
+body.light .rec-pod::before{background:linear-gradient(90deg,transparent,rgba(122,82,24,.4),transparent)}
+body.light .rec-topbar,.body.light .rec-botbar{border-color:rgba(122,82,24,.1)}
+body.light .rec-texts{border-color:rgba(122,82,24,.1)}
+body.light .rec-lbl{color:rgba(122,82,24,.45)}
+body.light .rec-source{color:#7a5218}
+body.light .rec-num,.body.light .rec-cnt{color:#b07a30}
 body.light .rec-badge{background:rgba(122,82,24,.06);border-color:rgba(122,82,24,.2);color:#7a5218}
-body.light .rec-source,.body.light .rec-num{color:#7a5218}
-body.light .rec-main,.body.light .rec-sub,.body.light .rec-solo{border-color:rgba(122,82,24,.24)}
+body.light .rec-dot{background:rgba(122,82,24,.14);border-color:rgba(122,82,24,.18)}
+body.light .rec-dot.rec-dot--a{background:#b07a30;border-color:#c9a86c}
+body.light .rec-hint{color:rgba(122,82,24,.4)}
+body.light .rec-prog-track{background:rgba(122,82,24,.1)}
+body.light .rec-main,.body.light .rec-sub,.body.light .rec-solo{border-color:rgba(122,82,24,.22)}
+body.light .rec-fade-t{background:linear-gradient(to bottom,rgba(250,247,241,.65),transparent)}
+body.light .rec-fade-b{background:linear-gradient(to top,rgba(250,247,241,.65),transparent)}
 
 /* ── Section entrance ambient pulse ── */
 @keyframes sectionGlow{
@@ -2212,79 +2298,111 @@ body.light .rec-main,.body.light .rec-sub,.body.light .rec-solo{border-color:rgb
 
 <!-- ═══════════════════════════════════════════
      RECOGNITION & ACKNOWLEDGEMENTS
+     Sticky-scroll showcase. No .s3d class — CSS transform on an
+     ancestor breaks position:sticky in all major browsers.
 ═══════════════════════════════════════════ -->
-<section id="rec" class="s3d">
+<section id="rec">
   <div class="sec-glow" id="sgr"></div>
-  <div class="reci">
 
-    <!-- Section header — reuses .sh system -->
-    <div class="sh" style="margin-bottom:5rem">
-      <span class="ey" id="rey">Credibility &amp; Prestige</span>
-      <h2 id="rh2">Recognition &amp;<br>Acknowledgements</h2>
-      <p id="rp">Moments of trust earned through work, community, and impact.</p>
-    </div>
+  <!-- Sticky stage — height:100vh; sticks while #rec canvas scrolls -->
+  <div class="rec-stage">
+    <div class="rec-pod" id="recPod">
 
-    <!-- ── 01 · Zee News Media Group ── -->
-    <div class="rec-item" id="ri1">
-      <div class="rec-text">
-        <span class="rec-num">01</span>
-        <span class="rec-source">National Media Recognition</span>
-        <h3 class="rec-title">Zee News<br>Media Group</h3>
-        <span class="rec-badge">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          ZEE 24 Kalak · Bhavnagar
-        </span>
+      <!-- ── Top bar: label · progress fill · counter ── -->
+      <div class="rec-topbar">
+        <span class="rec-lbl">Recognition &amp; Acknowledgements</span>
+        <div class="rec-prog-track"><div class="rec-prog-fill" id="recFill"></div></div>
+        <span class="rec-cnt" id="recCounter">01 / 03</span>
       </div>
-      <div class="rec-imgs">
-        <div class="rec-dual">
-          <div class="rec-main"><img src="assets/rec-zee-2.jpg" alt="Zee News recognition ceremony" loading="lazy"></div>
-          <div class="rec-sub"><img src="assets/rec-zee-1.jpg" alt="ZEE 24 Kalak live broadcast" loading="lazy"></div>
+
+      <!-- ── Body: text left, visuals right ── -->
+      <div class="rec-body">
+
+        <!-- Text slides — absolutely stacked; JS drives opacity + translateY -->
+        <div class="rec-texts">
+
+          <div class="rec-slide" data-index="0">
+            <span class="rec-num">01</span>
+            <span class="rec-source">National Media Recognition</span>
+            <h3 class="rec-title">Zee News<br>Media Group</h3>
+            <span class="rec-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              ZEE 24 Kalak · Bhavnagar
+            </span>
+          </div>
+
+          <div class="rec-slide" data-index="1">
+            <span class="rec-num">02</span>
+            <span class="rec-source">Industry Excellence</span>
+            <h3 class="rec-title">Excellence in<br>Execution Award</h3>
+            <span class="rec-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+              JITO Connect · Bhavnagar
+            </span>
+          </div>
+
+          <div class="rec-slide" data-index="2">
+            <span class="rec-num">03</span>
+            <span class="rec-source">Community Recognition</span>
+            <h3 class="rec-title">Smruti Bhet</h3>
+            <span class="rec-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Waghawadi Cha Raja · Ganesh Chaturthi
+            </span>
+          </div>
+
+        </div><!-- /rec-texts -->
+
+        <!-- Visual slides — absolutely stacked; JS drives opacity + scale + translateY -->
+        <div class="rec-visuals">
+
+          <div class="rec-vis-item" data-index="0">
+            <div class="rec-dual">
+              <div class="rec-main" id="rvm0"><img src="assets/rec-zee-2.jpg" alt="Zee News recognition ceremony" loading="lazy"></div>
+              <div class="rec-sub" id="rvs0"><img src="assets/rec-zee-1.jpg" alt="ZEE 24 Kalak live broadcast" loading="lazy"></div>
+            </div>
+          </div>
+
+          <div class="rec-vis-item" data-index="1">
+            <div class="rec-dual">
+              <div class="rec-main" id="rvm1"><img src="assets/rec-jito-1.jpg" alt="JITO Excellence in Execution Award" loading="lazy"></div>
+              <div class="rec-sub" id="rvs1"><img src="assets/rec-jito-2.jpg" alt="JITO award presentation" loading="lazy"></div>
+            </div>
+          </div>
+
+          <div class="rec-vis-item" data-index="2">
+            <div class="rec-solo">
+              <img src="assets/rec-waghawadi-1.jpg" alt="Smruti Bhet from Waghawadi Cha Raja" loading="lazy">
+            </div>
+          </div>
+
+        </div><!-- /rec-visuals -->
+
+      </div><!-- /rec-body -->
+
+      <!-- Content edge fades — hint at depth above/below -->
+      <div class="rec-fade-t"></div>
+      <div class="rec-fade-b"></div>
+
+      <!-- ── Bottom bar: dot pills · scroll hint ── -->
+      <div class="rec-botbar">
+        <div class="rec-dots">
+          <div class="rec-dot rec-dot--a" data-ri="0"></div>
+          <div class="rec-dot" data-ri="1"></div>
+          <div class="rec-dot" data-ri="2"></div>
+        </div>
+        <div class="rec-hint" id="recHint">
+          <span>Scroll to explore</span>
+          <svg width="12" height="16" viewBox="0 0 12 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="1" x2="6" y2="11"/>
+            <polyline points="2,7 6,12 10,7"/>
+          </svg>
         </div>
       </div>
-    </div>
 
-    <div class="rec-div" id="rd1"></div>
+    </div><!-- /rec-pod -->
+  </div><!-- /rec-stage -->
 
-    <!-- ── 02 · JITO Excellence in Execution Award ── -->
-    <div class="rec-item rec-item--rev" id="ri2">
-      <div class="rec-text">
-        <span class="rec-num">02</span>
-        <span class="rec-source">Industry Excellence</span>
-        <h3 class="rec-title">Excellence in<br>Execution Award</h3>
-        <span class="rec-badge">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-          JITO Connect · Bhavnagar
-        </span>
-      </div>
-      <div class="rec-imgs">
-        <div class="rec-dual">
-          <div class="rec-main"><img src="assets/rec-jito-1.jpg" alt="JITO Excellence in Execution Award" loading="lazy"></div>
-          <div class="rec-sub"><img src="assets/rec-jito-2.jpg" alt="JITO award presentation" loading="lazy"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="rec-div" id="rd2"></div>
-
-    <!-- ── 03 · Smruti Bhet · Waghawadi Cha Raja ── -->
-    <div class="rec-item" id="ri3">
-      <div class="rec-text">
-        <span class="rec-num">03</span>
-        <span class="rec-source">Community Recognition</span>
-        <h3 class="rec-title">Smruti Bhet</h3>
-        <span class="rec-badge">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Waghawadi Cha Raja · Ganesh Chaturthi
-        </span>
-      </div>
-      <div class="rec-imgs">
-        <div class="rec-solo">
-          <img src="assets/rec-waghawadi-1.jpg" alt="Smruti Bhet from Waghawadi Cha Raja" loading="lazy">
-        </div>
-      </div>
-    </div>
-
-  </div>
 </section>
 
 <!-- ═══════════════════════════════════════════
@@ -2480,19 +2598,144 @@ const ro=new IntersectionObserver(entries=>{
   const el=document.getElementById(id);if(el)ro.observe(el);
 });
 
-/* ─── RECOGNITION SCROLL REVEALS ──────────── */
+/* ─── RECOGNITION STICKY SCROLL ENGINE ────────────────────────────
+   Sticky-scroll pattern: #rec is a tall canvas (420vh). .rec-stage
+   sticks at top:0 while the user scrolls. JS reads how far #rec has
+   been scrolled past and drives all animations from that progress.
+   Add more items: duplicate .rec-slide + .rec-vis-item, increase N.
+   ─────────────────────────────────────────────────────────────── */
 (function(){
-  const rObs=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
+  'use strict';
+  var section=document.getElementById('rec');
+  if(!section)return;
+
+  var N=3; // total recognition items — update when adding more
+
+  var slides=[].slice.call(section.querySelectorAll('.rec-slide'));
+  var visItems=[].slice.call(section.querySelectorAll('.rec-vis-item'));
+  var fillEl=document.getElementById('recFill');
+  var cntEl=document.getElementById('recCounter');
+  var dots=[].slice.call(section.querySelectorAll('.rec-dot'));
+  var hintEl=document.getElementById('recHint');
+  var podEl=document.getElementById('recPod');
+  var sgr=document.getElementById('sgr');
+
+  // Dual-image parallax handles (only first two items have main/sub)
+  var mainEls=[document.getElementById('rvm0'),document.getElementById('rvm1')];
+  var subEls=[document.getElementById('rvs0'),document.getElementById('rvs1')];
+
+  // Pod + sec-glow reveal on first intersection
+  var podObs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
       if(!e.isIntersecting)return;
-      e.target.classList.add('v');
-      if(e.target.classList.contains('sec-glow'))e.target.classList.add('fire');
-      rObs.unobserve(e.target);
+      if(podEl)podEl.classList.add('v');
+      if(sgr){sgr.classList.add('v','fire');}
+      podObs.disconnect();
     });
-  },{threshold:.1,rootMargin:'0px 0px -40px 0px'});
-  ['sgr','rey','rh2','rp','ri1','rd1','ri2','rd2','ri3'].forEach(id=>{
-    const el=document.getElementById(id);if(el)rObs.observe(el);
-  });
+  },{threshold:0.02});
+  podObs.observe(section);
+
+  function clamp(v,lo,hi){return v<lo?lo:v>hi?hi:v}
+
+  function getSectionProgress(){
+    var rect=section.getBoundingClientRect();
+    var scrollable=section.offsetHeight-window.innerHeight;
+    if(scrollable<=0)return 0;
+    return clamp(-rect.top/scrollable,0,1);
+  }
+
+  var raf=null;
+  function animate(){
+    var prog=getSectionProgress();
+
+    // Reserve first 12% of scroll for pod entrance; remaining 88% for items
+    var cp=clamp((prog-0.12)/0.88,0,1);
+
+    // Which item: 0, 1, 2 + fractional position within that item
+    var ip=cp*N;
+    var idx=Math.min(Math.floor(ip),N-1);
+    var frac=ip-idx; // 0→1 within current item's scroll band
+
+    // Progress bar width
+    if(fillEl)fillEl.style.width=(cp*100).toFixed(1)+'%';
+
+    // Counter "01 / 03"
+    if(cntEl)cntEl.textContent='0'+(idx+1)+' / 0'+N;
+
+    // Dot pills
+    dots.forEach(function(d,i){
+      if(i===idx)d.classList.add('rec-dot--a');
+      else d.classList.remove('rec-dot--a');
+    });
+
+    // Scroll hint: fade out as last item approaches its end
+    if(hintEl){
+      var hv=idx<N-1?1:clamp(1-frac*4,0,1);
+      hintEl.style.opacity=hv;
+    }
+
+    // ── Text slides ──
+    slides.forEach(function(sl,i){
+      var op,ty;
+      if(i===idx){
+        // Enter: 0→0.15; steady: 0.15→0.78; exit: 0.78→1
+        var einT=clamp(frac<0.15?frac/0.15:1,0,1);
+        var eoutT=frac>0.78?(frac-0.78)/0.22:0;
+        op=clamp(einT-eoutT,0,1);
+        ty=(1-einT)*22-eoutT*20;
+      } else if(i<idx){
+        op=0; ty=-22;
+      } else {
+        // Peek: next item hints in during last 18% of current item
+        var pT=frac>0.82?(frac-0.82)/0.18:0;
+        op=pT*0.28; ty=20-pT*8;
+      }
+      sl.style.opacity=op;
+      sl.style.transform='translateY('+ty.toFixed(1)+'px)';
+      sl.style.visibility=op>0.01?'visible':'hidden';
+    });
+
+    // ── Visual panels ──
+    visItems.forEach(function(vi,i){
+      var op,sc,ty;
+      if(i===idx){
+        var einT=clamp(frac<0.18?frac/0.18:1,0,1);
+        var eoutT=frac>0.75?(frac-0.75)/0.25:0;
+        op=clamp(einT-eoutT*0.95,0,1);
+        sc=0.93+(einT-eoutT*0.04)*0.07;
+        ty=(1-einT)*18-eoutT*14;
+      } else if(i<idx){
+        op=0; sc=0.93; ty=-14;
+      } else {
+        var pT=frac>0.80?(frac-0.80)/0.20:0;
+        op=pT*0.22; sc=0.97+pT*0.02; ty=16-pT*6;
+      }
+      vi.style.opacity=op;
+      vi.style.transform='scale('+sc.toFixed(3)+') translateY('+ty.toFixed(1)+'px)';
+      vi.style.visibility=op>0.01?'visible':'hidden';
+    });
+
+    // ── Dual-image inner parallax (main drifts up, sub drifts down) ──
+    mainEls.forEach(function(mel,i){
+      var sel=subEls[i];
+      if(!mel)return;
+      if(i===idx){
+        var shift=(frac*10).toFixed(1);
+        mel.style.transform='translateY(-'+shift+'px)';
+        if(sel)sel.style.transform='translateY('+((frac*6).toFixed(1))+'px)';
+      } else {
+        mel.style.transform='';
+        if(sel)sel.style.transform='';
+      }
+    });
+
+    raf=null;
+  }
+
+  function onScroll(){if(!raf)raf=requestAnimationFrame(animate);}
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',function(){animate();},{passive:true});
+  animate(); // initial state
 })();
 
 /* ─── STAT COUNTER ANIMATION ─────────────── */
