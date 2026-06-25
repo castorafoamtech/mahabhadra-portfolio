@@ -1806,7 +1806,10 @@ body.light .ogc-hint{
 }
 
 /* ── Overview (cumulative) panel ── */
-.rec-panel--ov{grid-template-columns:1fr !important}
+.rec-panel--ov{
+  grid-template-columns:1fr !important;
+  grid-template-rows:1fr !important;
+}
 .rec-ov{
   display:flex;flex-direction:column;gap:1.4rem;
   height:100%;padding:1.8rem 2.2rem;
@@ -2380,7 +2383,7 @@ body.light .rec-fade-b{background:linear-gradient(to top,rgba(250,247,241,.65),t
             <div class="rec-ov">
               <div class="rec-ov-head">
                 <span class="rec-ov-ey">Recognition &amp; Acknowledgements</span>
-                <h3 class="rec-ov-ttl">4 Awards &amp; Recognitions</h3>
+                <h3 class="rec-ov-ttl">Recognition &amp; Acknowledgements</h3>
                 <p class="rec-ov-sub">Scroll inside to explore each one in detail</p>
               </div>
               <div class="rec-ov-grid">
@@ -2390,11 +2393,11 @@ body.light .rec-fade-b{background:linear-gradient(to top,rgba(250,247,241,.65),t
                 </div>
                 <div class="rec-ov-card" data-goto="2">
                   <img src="assets/rec-jito-1.jpg" alt="JITO Excellence" loading="lazy">
-                  <div class="rec-ov-lbl">Excellence in Execution</div>
+                  <div class="rec-ov-lbl">JITO Excellence in Execution</div>
                 </div>
                 <div class="rec-ov-card" data-goto="3">
                   <img src="assets/rec-community-1.jpg" alt="Community Excellence" loading="lazy">
-                  <div class="rec-ov-lbl">Awards for Community Excellence</div>
+                  <div class="rec-ov-lbl">Award for Community Excellence</div>
                 </div>
                 <div class="rec-ov-card" data-goto="4">
                   <img src="assets/rec-waghawadi-1.jpg" alt="Smruti Bhet" loading="lazy">
@@ -2428,7 +2431,7 @@ body.light .rec-fade-b{background:linear-gradient(to top,rgba(250,247,241,.65),t
             <div class="rec-txt">
               <span class="rec-num">02</span>
               <span class="rec-source">Industry Excellence</span>
-              <h3 class="rec-title">Excellence in<br>Execution Award</h3>
+              <h3 class="rec-title">JITO Excellence in<br>Execution Award</h3>
               <span class="rec-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
                 JITO Connect · Bhavnagar
@@ -2442,12 +2445,12 @@ body.light .rec-fade-b{background:linear-gradient(to top,rgba(250,247,241,.65),t
             </div>
           </div>
 
-          <!-- Panel 03 · Awards for Community Excellence (new) -->
+          <!-- Panel 03 · Award for Community Excellence (new) -->
           <div class="rec-panel" data-panel="3">
             <div class="rec-txt">
               <span class="rec-num">03</span>
               <span class="rec-source">Community Excellence</span>
-              <h3 class="rec-title">Awards for<br>Community Excellence</h3>
+              <h3 class="rec-title">Award for<br>Community Excellence</h3>
               <span class="rec-badge">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 Bhavnagar · Community Award
@@ -2845,6 +2848,9 @@ const ro=new IntersectionObserver(entries=>{
     entries.forEach(function(e){
       if(!e.isIntersecting) return;
       pod.classList.add('v');
+      /* Re-run layout after reveal: CSS transition may have shifted
+         offsetHeight from the initial load-time calculation */
+      requestAnimationFrame(function(){ layout(); });
       var sgr = document.getElementById('sgr');
       if(sgr) sgr.classList.add('v','fire');
       revObs.disconnect();
@@ -2853,8 +2859,10 @@ const ro=new IntersectionObserver(entries=>{
   revObs.observe(pod);
 
   /* ── Init ── */
+  /* Run layout twice: once immediately, once after all assets settle */
   layout();
   updateChrome();
+  window.addEventListener('load', function(){ layout(); }, { passive: true });
   window.addEventListener('resize', layout, { passive: true });
 })();
 
