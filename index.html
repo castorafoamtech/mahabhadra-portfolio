@@ -1764,21 +1764,21 @@ body.light .ogc-hint{
   overflow:hidden;
 }
 
-/* ── Vertical sliding track — JS sets translateY ── */
+/* ── Vertical sliding track — flex column, JS sets height + translateY ── */
 .rec-track{
-  position:absolute;
-  top:0;left:0;right:0;
+  display:flex;flex-direction:column;
   /* height set by JS = N × panel height */
   will-change:transform;
   transition:transform .78s cubic-bezier(.16,1,.3,1);
 }
 
-/* ── Each award panel — top/height set by JS ── */
+/* ── Each award panel — flex child, height set by JS ── */
 .rec-panel{
-  position:absolute;
-  left:0;right:0;
+  flex:0 0 auto;
+  width:100%;
   display:grid;
   grid-template-columns:42% 58%;
+  /* No position:absolute — stacks naturally in flex column, can never overlap */
 }
 @media(max-width:767px){
   .rec-panel{grid-template-columns:1fr;grid-template-rows:48% 52%}
@@ -2729,14 +2729,25 @@ const ro=new IntersectionObserver(entries=>{
   var busy     = false;
   var TRANS    = 800; // ms — matches CSS transition duration
 
-  /* ── Layout: give track and panels explicit pixel heights ── */
-  function layout(){
+  /* ── Get panel height reliably ──
+     viewport.offsetHeight returns 0 if layout hasn't settled yet.
+     Fall back to pod.getBoundingClientRect() which forces a synchronous
+     reflow and always returns accurate dimensions for off-screen elements. */
+  function panelH(){
     var h = viewport.offsetHeight;
-    if(h === 0) return;
+    if(h > 0) return h;
+    var podH = pod.getBoundingClientRect().height;
+    return Math.max(podH - 104, 0); // 104 = 48 topbar + 56 botbar
+  }
+
+  /* ── Layout: set track height and each panel height ── */
+  function layout(){
+    var h = panelH();
+    if(h <= 0) return;
     track.style.height = (N * h) + 'px';
-    panels.forEach(function(p, i){
-      p.style.top    = (i * h) + 'px';
+    panels.forEach(function(p){
       p.style.height = h + 'px';
+      /* No p.style.top — panels stack naturally in the flex column */
     });
     /* Snap to current panel without animation on resize */
     var was = track.style.transition;
@@ -2746,8 +2757,8 @@ const ro=new IntersectionObserver(entries=>{
   }
 
   function applyTranslate(){
-    var h = viewport.offsetHeight || 1;
-    track.style.transform = 'translateY(' + (-current * h) + 'px)';
+    var h = panelH();
+    if(h > 0) track.style.transform = 'translateY(' + (-current * h) + 'px)';
   }
 
   /* ── Navigate to panel index i ── */
