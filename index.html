@@ -1764,21 +1764,37 @@ body.light .ogc-hint{
   overflow:hidden;
 }
 
-/* ── Vertical sliding track — flex column, JS sets height + translateY ── */
+/* ── Track — static container, no animation ── */
 .rec-track{
-  display:flex;flex-direction:column;
-  /* height set by JS = N × panel height */
-  will-change:transform;
-  transition:transform .78s cubic-bezier(.16,1,.3,1);
+  position:relative;
+  width:100%;height:100%;
 }
 
-/* ── Each award panel — flex child, height set by JS ── */
+/* ── Each panel fills the viewport and slides independently ──
+   Using per-panel translateY avoids the overflow:hidden + will-change:transform
+   GPU compositing bug that causes adjacent panels to bleed through on laptop. ── */
 .rec-panel{
-  flex:0 0 auto;
-  width:100%;
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
   display:grid;
   grid-template-columns:42% 58%;
-  /* No position:absolute — stacks naturally in flex column, can never overlap */
+  transform:translateY(100%); /* default: waiting below */
+  opacity:0;
+  pointer-events:none;
+  transition:transform .78s cubic-bezier(.16,1,.3,1),
+             opacity .45s ease;
+}
+/* Active panel */
+.rec-panel[data-st="a"]{
+  transform:translateY(0);
+  opacity:1;
+  pointer-events:auto;
+}
+/* Previous panel (above) */
+.rec-panel[data-st="p"]{
+  transform:translateY(-100%);
+  opacity:0;
+  pointer-events:none;
 }
 @media(max-width:767px){
   .rec-panel{grid-template-columns:1fr;grid-template-rows:48% 52%}
@@ -2729,36 +2745,15 @@ const ro=new IntersectionObserver(entries=>{
   var busy     = false;
   var TRANS    = 800; // ms — matches CSS transition duration
 
-  /* ── Get panel height reliably ──
-     viewport.offsetHeight returns 0 if layout hasn't settled yet.
-     Fall back to pod.getBoundingClientRect() which forces a synchronous
-     reflow and always returns accurate dimensions for off-screen elements. */
-  function panelH(){
-    var h = viewport.offsetHeight;
-    if(h > 0) return h;
-    var podH = pod.getBoundingClientRect().height;
-    return Math.max(podH - 104, 0); // 104 = 48 topbar + 56 botbar
-  }
-
-  /* ── Layout: set track height and each panel height ── */
-  function layout(){
-    var h = panelH();
-    if(h <= 0) return;
-    track.style.height = (N * h) + 'px';
-    panels.forEach(function(p){
-      p.style.height = h + 'px';
-      /* No p.style.top — panels stack naturally in the flex column */
+  /* ── Set data-st on every panel: "a"=active "p"=prev (none)=next ──
+     Each panel slides itself — no track translation, no overflow:hidden
+     dependency, no JS layout measurement needed at all. ── */
+  function updatePanelStates(){
+    panels.forEach(function(p, i){
+      if(i < current)       p.setAttribute('data-st', 'p');
+      else if(i === current) p.setAttribute('data-st', 'a');
+      else                   p.removeAttribute('data-st');
     });
-    /* Snap to current panel without animation on resize */
-    var was = track.style.transition;
-    track.style.transition = 'none';
-    applyTranslate();
-    requestAnimationFrame(function(){ track.style.transition = was; });
-  }
-
-  function applyTranslate(){
-    var h = panelH();
-    if(h > 0) track.style.transform = 'translateY(' + (-current * h) + 'px)';
   }
 
   /* ── Navigate to panel index i ── */
@@ -2767,7 +2762,7 @@ const ro=new IntersectionObserver(entries=>{
     if(busy || i === current) return;
     current = i;
     busy = true;
-    applyTranslate();
+    updatePanelStates();
     updateChrome();
     setTimeout(function(){ busy = false; }, TRANS + 80);
   }
@@ -2859,9 +2854,6 @@ const ro=new IntersectionObserver(entries=>{
     entries.forEach(function(e){
       if(!e.isIntersecting) return;
       pod.classList.add('v');
-      /* Re-run layout after reveal: CSS transition may have shifted
-         offsetHeight from the initial load-time calculation */
-      requestAnimationFrame(function(){ layout(); });
       var sgr = document.getElementById('sgr');
       if(sgr) sgr.classList.add('v','fire');
       revObs.disconnect();
@@ -2870,11 +2862,8 @@ const ro=new IntersectionObserver(entries=>{
   revObs.observe(pod);
 
   /* ── Init ── */
-  /* Run layout twice: once immediately, once after all assets settle */
-  layout();
+  updatePanelStates(); /* No JS sizing needed — panels fill viewport via CSS */
   updateChrome();
-  window.addEventListener('load', function(){ layout(); }, { passive: true });
-  window.addEventListener('resize', layout, { passive: true });
 })();
 
 /* ─── STAT COUNTER ANIMATION ─────────────── */
