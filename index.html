@@ -2809,14 +2809,44 @@ const ro=new IntersectionObserver(entries=>{
     });
   });
 
-  /* ── Wheel: capture inside pod; release at top/bottom boundary ── */
+  /* ── Scroll lock: activates when pod centre aligns with viewport centre ──
+     Once locked, wheel/trackpad events drive panel navigation instead of
+     page scroll. Lock releases when user reaches first or last panel. ── */
+  var locked = false, snapPending = false;
+
+  function podCentreOffset(){
+    var r = pod.getBoundingClientRect();
+    return (r.top + r.height / 2) - (window.innerHeight / 2);
+  }
+
+  function activateLock(){
+    if(locked) return;
+    locked = true;
+    /* Snap pod to exact centre so it feels anchored */
+    var off = podCentreOffset();
+    if(Math.abs(off) > 8){
+      snapPending = true;
+      window.scrollBy({ top: off, behavior: 'smooth' });
+      setTimeout(function(){ snapPending = false; }, 500);
+    }
+  }
+
+  window.addEventListener('scroll', function(){
+    if(locked) return;
+    /* Activate when pod centre is within 22% of viewport height from centre */
+    if(Math.abs(podCentreOffset()) < window.innerHeight * 0.22) activateLock();
+  }, { passive: true });
+
+  /* ── Wheel: captured at window level when locked ── */
   var wSum = 0, wTimer = null;
-  pod.addEventListener('wheel', function(e){
+  window.addEventListener('wheel', function(e){
+    if(!locked) return;
+    if(snapPending){ e.preventDefault(); return; }
     var down = e.deltaY > 0;
-    /* At last panel scrolling down OR at first panel scrolling up → release to page */
-    if((down && current === N - 1) || (!down && current === 0)) return;
+    /* Release lock at panel boundaries so page scroll continues */
+    if(down  && current === N - 1){ locked = false; return; }
+    if(!down && current === 0)    { locked = false; return; }
     e.preventDefault();
-    e.stopPropagation();
     wSum += e.deltaY;
     clearTimeout(wTimer);
     wTimer = setTimeout(function(){
