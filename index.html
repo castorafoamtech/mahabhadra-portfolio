@@ -2811,8 +2811,10 @@ const ro=new IntersectionObserver(entries=>{
 
   /* ── Scroll lock: activates when pod centre aligns with viewport centre ──
      Once locked, wheel/trackpad events drive panel navigation instead of
-     page scroll. Lock releases when user reaches first or last panel. ── */
-  var locked = false, snapPending = false;
+     page scroll. Lock releases when user reaches first or last panel.
+     'released' flag prevents immediate re-lock after leaving — the pod
+     must first exit the trigger zone before re-lock is allowed. ── */
+  var locked = false, snapPending = false, released = false;
 
   function podCentreOffset(){
     var r = pod.getBoundingClientRect();
@@ -2822,6 +2824,7 @@ const ro=new IntersectionObserver(entries=>{
   function activateLock(){
     if(locked) return;
     locked = true;
+    released = false;
     /* Snap pod to exact centre so it feels anchored */
     var off = podCentreOffset();
     if(Math.abs(off) > 8){
@@ -2833,8 +2836,13 @@ const ro=new IntersectionObserver(entries=>{
 
   window.addEventListener('scroll', function(){
     if(locked) return;
-    /* Activate when pod centre is within 22% of viewport height from centre */
-    if(Math.abs(podCentreOffset()) < window.innerHeight * 0.22) activateLock();
+    var off = Math.abs(podCentreOffset());
+    if(released){
+      /* Clear released flag only once pod has moved well outside the zone */
+      if(off > window.innerHeight * 0.38) released = false;
+      return; /* Never re-lock while released */
+    }
+    if(off < window.innerHeight * 0.22) activateLock();
   }, { passive: true });
 
   /* ── Wheel: captured at window level when locked ── */
@@ -2843,9 +2851,10 @@ const ro=new IntersectionObserver(entries=>{
     if(!locked) return;
     if(snapPending){ e.preventDefault(); return; }
     var down = e.deltaY > 0;
-    /* Release lock at panel boundaries so page scroll continues */
-    if(down  && current === N - 1){ locked = false; return; }
-    if(!down && current === 0)    { locked = false; return; }
+    /* Release lock at panel boundaries — set released so page scroll
+       continues without immediately re-locking */
+    if(down  && current === N - 1){ locked = false; released = true; return; }
+    if(!down && current === 0)    { locked = false; released = true; return; }
     e.preventDefault();
     wSum += e.deltaY;
     clearTimeout(wTimer);
@@ -2930,7 +2939,7 @@ const ro=new IntersectionObserver(entries=>{
 (function(){
   const spb=document.getElementById('spb');
   const dots=[...document.querySelectorAll('.dn')];
-  const secIds=['hero','vision','fac','cap','rec','con'];
+  const secIds=['hero','vision','fac','rec','cap','con'];
   const secs=secIds.map(id=>document.getElementById(id));
   const facBg=document.querySelector('.fac-bg-img');
   const capBg=document.querySelector('.cap-bg-img');
